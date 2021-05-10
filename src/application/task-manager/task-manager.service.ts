@@ -17,7 +17,7 @@ export class TaskManagerService{
     }
 
     editById(id:string,editTaskData:EditTaskDto):Promise<TaskManager>{
-        return this.editById(id,editTaskData)
+        return this.taskManagerRepository.editById(id,editTaskData)
     }
 
     deleteById(id:string):Promise<boolean>{
