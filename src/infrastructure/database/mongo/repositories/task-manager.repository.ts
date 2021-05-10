@@ -1,12 +1,13 @@
 import {
-    BadRequestException,
+  BadRequestException,
   HttpCode,
+  HttpException,
   HttpStatus,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { ConnectionStates, Model } from 'mongoose';
 import { CreateTaskDto } from 'src/domain/dto/task-manager/create-task.dto';
 import { EditTaskDto } from 'src/domain/dto/task-manager/edit-task.dto';
 import { TaskManager, TaskManagerDocument } from '../models/task-manager.model';
@@ -19,48 +20,45 @@ export class TaskManagerRepository {
   ) {}
 
   async findAll(): Promise<TaskManagerDocument[]> {
-    try{
-
-        return this.taskManagerModel.find({});
-    }catch(e){
-        
+    try {
+      return this.taskManagerModel.find({});
+    } catch (e) {
+      throw new HttpException('Internal Server Error',HttpStatus.INTERNAL_SERVER_ERROR)
     }
   }
 
   async create(data: CreateTaskDto): Promise<TaskManager> {
-      try{
-        return this.taskManagerModel.create(data);
+    try {
+      return this.taskManagerModel.create(data);
+    } catch (e) {
+      throw new HttpException('Something went wront try again',HttpStatus.BAD_REQUEST)
 
-      }catch(e){
-        throw new BadRequestException('bad Request')
-
-      }
+    }
   }
 
   async editById(id: string, data: EditTaskDto): Promise<TaskManager> {
-      try{
-        const task = await this.taskManagerModel.findById({ _id: id });
-        if (!task) throw new NotFoundException('taks not found');
-        const editedTask = await this.taskManagerModel.updateOne(
-          { _id: id },
-          { ...data },
-        );
-        if (editedTask) return task;
-      }catch(e){
-        throw new BadRequestException('bad Request')
-
-      }
-
+    try {
+      const task = await this.taskManagerModel.findById({ _id: id });
+      if (!task) throw new HttpException('taks not found',HttpStatus.NOT_FOUND);
+      const editedTask = await this.taskManagerModel.updateOne(
+        { _id: id },
+        data,
+      );
+      if (editedTask) return task;
+    } catch (e) {
+      throw new HttpException('Something went wront try again',HttpStatus.BAD_REQUEST)
+    }
   }
 
   async deleteById(id: string): Promise<boolean> {
+    
     try {
       const task = await this.taskManagerModel.findById({ _id: id });
-      if (!task) throw new NotFoundException('taks not found');
+      if (!task) throw new HttpException('task not found',HttpStatus.NOT_FOUND);
       const deleteTask = await this.taskManagerModel.deleteOne({ _id: id });
       if (deleteTask) return true;
     } catch (e) {
-        throw new BadRequestException('bad Request')
+      throw new HttpException('Something went wront try again',HttpStatus.BAD_REQUEST)
     }
   }
 
@@ -70,7 +68,8 @@ export class TaskManagerRepository {
       if (!task) throw new NotFoundException('taks not found');
       return task;
     } catch (e) {
-        throw new BadRequestException('bad Request')
+      throw new HttpException('Server Error',HttpStatus.INTERNAL_SERVER_ERROR)
+
     }
   }
 }

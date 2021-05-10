@@ -1,0 +1,38 @@
+version: "3.7"
+
+networks:
+  my-net:
+    name: my-net
+volumes:
+  app-mongo-data:
+
+
+services:
+  task-manager:
+    container_name: task-manager
+    restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/app
+    tty: true
+    ports:
+      - "3000:3000"
+    command: ["sh", "-c", "ls && npm install && npm run start:debug"]
+    env_file:
+      - .env
+    networks:
+      - my-net
+
+  app-mongo:
+    container_name: app-mongo
+    restart: always
+    image: mongo:4
+    volumes:
+        - app-mongo-data:/data/db
+    ports:
+        - "27017:27017"
+    networks:
+        - my-net
+    
